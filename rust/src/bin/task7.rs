@@ -102,7 +102,7 @@ impl PartialEq for WeightedRange {
 fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
     match composite.peek().cloned() {
         // Nothing here, so add the square.
-        None => { println!("Adding {}", cp); &mut composite.push(WeightedRange::new(cp, cp).next()); true },
+        None => { &mut composite.push(WeightedRange::new(cp, cp).next()); true },
         // Number is composite, so go to the next one.
         Some(wr) if wr.0 == cp => { 
             while composite.peek().and_then(|cwr| Some(cwr.0)) == Some(wr.0) {
