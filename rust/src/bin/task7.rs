@@ -4,6 +4,7 @@ extern crate test;
 
 use std::collections::BinaryHeap;
 use std::cmp::Ordering;
+use std::ops::DerefMut;
 
 // From functional infinite sieve paper
 // https://www.cs.hmc.edu/~oneill/papers/Sieve-JFP.pdf
@@ -71,6 +72,10 @@ impl WeightedRange {
     fn next(&self) -> Self {
         WeightedRange(self.0 + self.1, self.1)
     }
+
+    fn next_mut(&mut self) {
+        self.0 += self.1;
+    }
 }
 
 impl Clone for WeightedRange {
@@ -110,18 +115,18 @@ fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
         // Number is composite, so go to the next one.
         Some(wr) if wr.0 == cp => { 
             while composite.peek().and_then(|cwr| Some(cwr.0)) == Some(wr.0) {
-                match composite.pop() {
+                match composite.peek_mut() {
                     None => (),
-                    Some(temp_wr) => { &mut composite.push(temp_wr.next()); () }
+                    Some(mut temp_wr) => { temp_wr.deref_mut().next_mut() }
                 };
             };
             false
         },
         Some(wr) if wr.0 < cp => { 
             while composite.peek().and_then(|cwr| Some(cwr.0)) < Some(cp) {
-                match composite.pop() {
+                match composite.peek_mut() {
                     None => (),
-                    Some(temp_wr) => { &mut composite.push(temp_wr.next()); () }
+                    Some(mut temp_wr) => { temp_wr.deref_mut().next_mut() }
                 };
             };
             if composite.peek().and_then(|cwr| Some(cwr.0)) > Some(wr.0) {
@@ -129,9 +134,9 @@ fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
                 true
             }
             else {
-                match composite.pop() {
+                match composite.peek_mut() {
                     None => (),
-                    Some(temp_wr) => { &mut composite.push(temp_wr.next()); () }
+                    Some(mut temp_wr) => { temp_wr.deref_mut().next_mut() }
                 };
                 false
             }
