@@ -86,7 +86,7 @@ impl WeightedRange {
     fn next_mut(&mut self) {
         while {
             self.0 += self.1;
-            Ring2357::should_skip(self.0)
+            false //Ring2357::should_skip(self.0)
         } { /* DO WHILE */ }
     }
 }
@@ -124,7 +124,7 @@ impl PartialEq for WeightedRange {
 fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
     match composite.peek().cloned() {
         // Nothing here, so add the square.
-        None => { &mut composite.push(WeightedRange::new(cp, cp).next()); true },
+        None => { let mut new_wr = WeightedRange::new(cp, cp); new_wr.next_mut(); &mut composite.push(new_wr); true },
         // Number is composite, so go to the next one.
         Some(wr) if wr.0 == cp => { 
             while composite.peek().and_then(|cwr| Some(cwr.0)) == Some(wr.0) {
@@ -156,7 +156,11 @@ fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
             }
         },
         // Number is prime
-        Some(wr) if wr.0 > cp => { composite.push(WeightedRange::new(cp*2, cp)); true },
+        Some(wr) if wr.0 > cp => { 
+            let mut new_wr = WeightedRange::new(cp, cp);
+            new_wr.next_mut();
+            composite.push(new_wr); true 
+            },
         // Something is wrong.
         Some(_) => false
     }
@@ -178,7 +182,6 @@ fn main() {
 fn bench_primes_10000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(100000);
-        composite.push(WeightedRange::new(11*11, 11));
         let candidates = SteppingCounter::new_from(11, Ring2357::new())
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(9_997)
