@@ -118,13 +118,23 @@ fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
             false
         },
         Some(wr) if wr.0 < cp => { 
-            while composite.peek().and_then(|cwr| Some(cwr.0)) <= Some(wr.0) {
+            while composite.peek().and_then(|cwr| Some(cwr.0)) < Some(cp) {
                 match composite.pop() {
                     None => (),
                     Some(temp_wr) => { &mut composite.push(temp_wr.next()); () }
                 };
             };
-            filter_prime(cp, composite)
+            if composite.peek().and_then(|cwr| Some(cwr.0)) > Some(wr.0) {
+                composite.push(WeightedRange::new(cp*2, cp));
+                true
+            }
+            else {
+                match composite.pop() {
+                    None => (),
+                    Some(temp_wr) => { &mut composite.push(temp_wr.next()); () }
+                };
+                false
+            }
         },
         // Number is prime
         Some(wr) if wr.0 > cp => { composite.push(WeightedRange::new(cp*2, cp)); true },
@@ -138,11 +148,11 @@ fn main() {
     composite.push(WeightedRange::new(11*11, 11));
     let candidates = SteppingCounter::new_from(11, Ring2357::new())
         .filter(|cp| filter_prime(*cp, &mut composite))
-        .take(9_999_997)
+        .take(99_997)
         .collect::<Vec<i32>>();
     let mut primes = vec![2,3,5,7];
     primes.extend(candidates);
-    println!("{}: {}", primes.len(), primes.last().unwrap_or(&-1));
+    //println!("{}: {}", primes.len(), primes.last().unwrap_or(&-1));
 }
 
 #[bench]
