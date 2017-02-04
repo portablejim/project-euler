@@ -176,8 +176,8 @@ fn bench_primes_10000(b: &mut test::Bencher) {
 fn bench_primes_100000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(100000);
-        composite.push(WeightedRange::new(11*11, 11));
-        let candidates = (3..).step_by(2) //SteppingCounter::new_from(11, Ring2357::new())
+        //composite.push(WeightedRange::new(11*11, 11));
+        let candidates = SteppingCounter::new_from(11, Ring2357::new())
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(99_997)
             .collect::<Vec<i32>>();
@@ -200,8 +200,8 @@ fn bench_primes_simple_10000(b: &mut test::Bencher) {
 fn bench_primes_simple_100000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(100000);
-        //composite.push(WeightedRange::new(11*11, 11));
-        let candidates = SteppingCounter::new_from(11, Ring2357::new())
+        composite.push(WeightedRange::new(11*11, 11));
+        let candidates = (3..).step_by(2) //SteppingCounter::new_from(11, Ring2357::new())
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(99_997)
             .collect::<Vec<i32>>();
