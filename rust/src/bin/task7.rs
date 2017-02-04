@@ -41,9 +41,9 @@ impl SteppingCounter {
         SteppingCounter { current: start, maximum: std::i32::MAX, it: iterator }
     }
 
-    fn new_from_to(start: i32, end: i32, iterator: Ring2357) -> SteppingCounter {
+    /*fn new_from_to(start: i32, end: i32, iterator: Ring2357) -> SteppingCounter {
         SteppingCounter { current: start, maximum: end, it: iterator }
-    }
+    }*/
 }
 
 impl Iterator for SteppingCounter {
@@ -144,7 +144,7 @@ fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
         // Number is prime
         Some(wr) if wr.0 > cp => { composite.push(WeightedRange::new(cp*2, cp)); true },
         // Something is wrong.
-        Some(wr) => false //panic!("Somehow the composite table of {} ({}) is less than the running total of {}", wr.0, wr.1, cp)
+        Some(_) => false
     }
 }
 
@@ -157,7 +157,7 @@ fn main() {
         .collect::<Vec<i32>>();
     let mut primes = vec![2,3,5,7];
     primes.extend(candidates);
-    //println!("{}: {}", primes.len(), primes.last().unwrap_or(&-1));
+    println!("{}: {}", primes.len(), primes.last().unwrap_or(&-1));
 }
 
 #[bench]
@@ -176,7 +176,6 @@ fn bench_primes_10000(b: &mut test::Bencher) {
 fn bench_primes_100000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(100000);
-        //composite.push(WeightedRange::new(11*11, 11));
         let candidates = SteppingCounter::new_from(11, Ring2357::new())
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(99_997)
@@ -188,8 +187,7 @@ fn bench_primes_100000(b: &mut test::Bencher) {
 fn bench_primes_simple_10000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(100000);
-        //composite.push(WeightedRange::new(11*11, 11));
-        let candidates = (3..).step_by(2) //SteppingCounter::new_from(11, Ring2357::new())
+        let candidates = (3..).step_by(2)
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(9_997)
             .collect::<Vec<i32>>();
@@ -201,7 +199,7 @@ fn bench_primes_simple_100000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(100000);
         composite.push(WeightedRange::new(11*11, 11));
-        let candidates = (3..).step_by(2) //SteppingCounter::new_from(11, Ring2357::new())
+        let candidates = (3..).step_by(2)
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(99_997)
             .collect::<Vec<i32>>();
