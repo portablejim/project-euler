@@ -14,19 +14,29 @@ struct Ring2357 {
     offset: usize,
 }
 
+trait Ring {
+    fn should_skip(target: i32) -> bool;
+    fn next(&mut self) -> Option<i32> ;
+}
+
 impl Ring2357 {
     fn new() -> Ring2357 {
         Ring2357 { offset: RING2357.len()-1 }
     }
 }
 
-impl Iterator for Ring2357 {
-    type Item = i32;
-
+impl Ring for Ring2357 {
     fn next(&mut self) -> Option<i32> {
         self.offset = (self.offset + 1) % RING2357.len();
         //println!("Ring - {}", RING2357[self.offset]);
         Some(RING2357[self.offset])
+    }
+
+    fn should_skip(target: i32) -> bool {
+        target % 2 == 0
+        || target % 3 == 0
+        || target % 5 == 0
+        || target % 7 == 0
     }
 }
 
@@ -74,7 +84,10 @@ impl WeightedRange {
     }
 
     fn next_mut(&mut self) {
-        self.0 += self.1;
+        while {
+            self.0 += self.1;
+            Ring2357::should_skip(self.0)
+        } { /* DO WHILE */ }
     }
 }
 
@@ -124,6 +137,7 @@ fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
         },
         Some(wr) if wr.0 < cp => { 
             while composite.peek().and_then(|cwr| Some(cwr.0)) < Some(cp) {
+                //println!("Less: {} + {}", composite.peek().unwrap().0, composite.peek().unwrap().1);
                 match composite.peek_mut() {
                     None => (),
                     Some(mut temp_wr) => { temp_wr.deref_mut().next_mut() }
@@ -150,7 +164,7 @@ fn filter_prime(cp: i32, composite: &mut BinaryHeap<WeightedRange>) -> bool {
 
 fn main() {
     let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(1000);
-    composite.push(WeightedRange::new(11*11, 11));
+    //composite.push(WeightedRange::new(11*11, 11));
     let candidates = SteppingCounter::new_from(11, Ring2357::new())
         .filter(|cp| filter_prime(*cp, &mut composite))
         .take(99_997)
@@ -183,7 +197,6 @@ fn bench_primes_100000(b: &mut test::Bencher) {
     });
 }
 
-#[bench]
 fn bench_primes_simple_10000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(100000);
@@ -194,7 +207,6 @@ fn bench_primes_simple_10000(b: &mut test::Bencher) {
     });
 }
 
-#[bench]
 fn bench_primes_simple_100000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: BinaryHeap<WeightedRange> = BinaryHeap::with_capacity(100000);
