@@ -1,9 +1,13 @@
 #![feature(test,step_by)]
 
 extern crate test;
+extern crate fnv;
 
 use std::collections::HashMap;
 use std::cmp::Ordering;
+use std::hash::BuildHasherDefault;
+use fnv::FnvHashMap;
+use fnv::FnvHasher;
 
 // From functional infinite sieve paper
 // https://www.cs.hmc.edu/~oneill/papers/Sieve-JFP.pdf
@@ -127,8 +131,8 @@ impl PartialEq for WeightedRange {
     }
 }
 
-fn filter_prime(cp: i32, composite: &mut HashMap<i32, Vec<WeightedRange>>) -> bool {
-    fn hash_remap(map: &mut HashMap<i32, Vec<WeightedRange>>, range: WeightedRange) {
+fn filter_prime(cp: i32, composite: &mut HashMap<i32, Vec<WeightedRange>, BuildHasherDefault<FnvHasher>>) -> bool {
+    fn hash_remap(map: &mut HashMap<i32, Vec<WeightedRange>, BuildHasherDefault<FnvHasher>>, range: WeightedRange) {
                 let next_range = range.next();
                 match map.get(&next_range.0).cloned() {
                     None => { map.insert(next_range.0, vec![next_range]); () },
@@ -152,7 +156,7 @@ fn filter_prime(cp: i32, composite: &mut HashMap<i32, Vec<WeightedRange>>) -> bo
 }
 
 fn main() {
-    let mut composite = HashMap::with_capacity(10_000);
+    let mut composite: HashMap<i32, Vec<WeightedRange>, BuildHasherDefault<FnvHasher>> = FnvHashMap::default();
     //composite.push(WeightedRange::new(11*11, 11));
     let candidates = SteppingCounter::new_from(11, Ring2357::new())
         .filter(|cp| filter_prime(*cp, &mut composite))
@@ -167,7 +171,7 @@ fn main() {
 #[bench]
 fn bench_primes_10000(b: &mut test::Bencher) {
     b.iter(|| {
-        let mut composite: HashMap<i32, Vec<WeightedRange>> = HashMap::with_capacity(10_000);
+        let mut composite: HashMap<i32, Vec<WeightedRange>, BuildHasherDefault<FnvHasher>> = FnvHashMap::default();
         SteppingCounter::new_from(11, Ring2357::new())
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(9_997)
@@ -178,7 +182,7 @@ fn bench_primes_10000(b: &mut test::Bencher) {
 #[bench]
 fn bench_primes_100000(b: &mut test::Bencher) {
     b.iter(|| {
-        let mut composite: HashMap<i32, Vec<WeightedRange>> = HashMap::with_capacity(100000);
+        let mut composite: HashMap<i32, Vec<WeightedRange>, BuildHasherDefault<FnvHasher>> = FnvHashMap::default();
         let candidates = SteppingCounter::new_from(11, Ring2357::new())
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(99_997)
