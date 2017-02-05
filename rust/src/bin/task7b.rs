@@ -128,26 +128,23 @@ impl PartialEq for WeightedRange {
 }
 
 fn filter_prime(cp: i32, composite: &mut HashMap<i32, Vec<WeightedRange>>) -> bool {
+    fn hash_remap(map: &mut HashMap<i32, Vec<WeightedRange>>, range: WeightedRange) {
+                let next_range = range.next();
+                match map.get(&next_range.0).cloned() {
+                    None => { map.insert(next_range.0, vec![next_range]); () },
+                    Some(mut list) => { list.push(next_range); map.insert(next_range.0, list); () },
+                };
+    }
     match composite.remove(&cp) {
         // Is prime
         None => {
-            let next_num = WeightedRange::new(cp*10, cp).next();
-            match composite.get(&next_num.0).cloned() {
-                // First
-                None => { composite.insert(next_num.0, vec![next_num]); () },
-                // Insert into already there
-                Some(mut list) => { list.push(next_num); composite.insert(next_num.0, list); () },
-            };
+            hash_remap(composite, WeightedRange::new(cp*10, cp));
             true
         },
         // Not prime, deal with composite numbers
         Some(ranges) => {
             for range in ranges {
-                let next_range = range.next();
-                match composite.get(&next_range.0).cloned() {
-                    None => { composite.insert(next_range.0, vec![next_range]); () },
-                    Some(mut list) => { list.push(next_range); composite.insert(next_range.0, list); () },
-                };
+                hash_remap(composite, range);
             }
             false
         }
@@ -155,7 +152,7 @@ fn filter_prime(cp: i32, composite: &mut HashMap<i32, Vec<WeightedRange>>) -> bo
 }
 
 fn main() {
-    let mut composite = HashMap::new();
+    let mut composite = HashMap::with_capacity(10_000);
     //composite.push(WeightedRange::new(11*11, 11));
     let candidates = SteppingCounter::new_from(11, Ring2357::new())
         .filter(|cp| filter_prime(*cp, &mut composite))
@@ -170,7 +167,7 @@ fn main() {
 #[bench]
 fn bench_primes_10000(b: &mut test::Bencher) {
     b.iter(|| {
-        let mut composite: HashMap<i32, Vec<WeightedRange>> = HashMap::with_capacity(100000);
+        let mut composite: HashMap<i32, Vec<WeightedRange>> = HashMap::with_capacity(10_000);
         SteppingCounter::new_from(11, Ring2357::new())
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(9_997)
