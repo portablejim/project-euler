@@ -70,7 +70,7 @@ impl Iterator for SteppingCounter {
     }
 }
 
-#[derive(Eq,Copy)]
+#[derive(Eq,Copy,Debug)]
 struct WeightedRange(i32, i32);
 
 impl WeightedRange {
@@ -131,22 +131,24 @@ fn filter_prime(cp: i32, composite: &mut HashMap<i32, Vec<WeightedRange>>) -> bo
     match composite.remove(&cp) {
         // Is prime
         None => {
-            let next_num = WeightedRange::new(cp, cp).next();
+            let next_num = WeightedRange::new(cp*10, cp).next();
             match composite.get(&next_num.0).cloned() {
                 // First
                 None => { composite.insert(next_num.0, vec![next_num]); () },
                 // Insert into already there
-                Some(mut list) => { list.push(next_num); () },
+                Some(mut list) => { list.push(next_num); composite.insert(next_num.0, list); () },
             };
             true
         },
         // Not prime, deal with composite numbers
         Some(ranges) => {
+            //println!("Ranges: {:?}", ranges);
             for range in ranges {
                 let next_range = range.next();
+                //println!("Next: {} > {} {} | {:?}", cp, next_range.0, next_range.1, composite.get(&next_range.0).cloned());
                 match composite.get(&next_range.0).cloned() {
                     None => { composite.insert(next_range.0, vec![next_range]); () },
-                    Some(mut list) => { list.push(next_range); () },
+                    Some(mut list) => { list.push(next_range); composite.insert(next_range.0, list); () },
                 };
             }
             false
@@ -171,10 +173,10 @@ fn main() {
 fn bench_primes_10000(b: &mut test::Bencher) {
     b.iter(|| {
         let mut composite: HashMap<i32, Vec<WeightedRange>> = HashMap::with_capacity(100000);
-        let candidates = SteppingCounter::new_from(11, Ring2357::new())
+        SteppingCounter::new_from(11, Ring2357::new())
             .filter(|cp| filter_prime(*cp, &mut composite))
             .take(9_997)
-            .collect::<Vec<i32>>();
+            .last().unwrap_or(0)
     });
 }
 
