@@ -142,10 +142,8 @@ fn filter_prime(cp: i32, composite: &mut HashMap<i32, Vec<WeightedRange>>) -> bo
         },
         // Not prime, deal with composite numbers
         Some(ranges) => {
-            //println!("Ranges: {:?}", ranges);
             for range in ranges {
                 let next_range = range.next();
-                //println!("Next: {} > {} {} | {:?}", cp, next_range.0, next_range.1, composite.get(&next_range.0).cloned());
                 match composite.get(&next_range.0).cloned() {
                     None => { composite.insert(next_range.0, vec![next_range]); () },
                     Some(mut list) => { list.push(next_range); composite.insert(next_range.0, list); () },
