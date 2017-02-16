@@ -5,3 +5,6 @@ authors = ["James McKay <dcseee-github@yahoo.com.au>"]
 
 [dependencies]
 fnv = "*"
+#simd = "*"
+simd = { git = "https://github.com/huonw/simd" }
+num = "*"
