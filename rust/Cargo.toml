@@ -8,3 +8,7 @@ fnv = "*"
 #simd = "*"
 simd = { git = "https://github.com/huonw/simd" }
 num = "*"
+
+[profile.release]
+debug = true
+
