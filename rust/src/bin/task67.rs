@@ -42,7 +42,7 @@ fn longest_length(tree: Vec<Vec<u32>>) -> u32 {
         };
     }
 
-    // Return or error with a shrug.*/
+    // Return or error with a shrug.
     *last_sums.iter().max().expect("Max should not be empty ¯\\_(ツ)_/¯")
 }
 
