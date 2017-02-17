@@ -4,10 +4,8 @@ extern crate test;
 use std::io::BufReader;
 use std::io::BufRead;
 use std::fs::File;
-use std::io::Read;
 use std::sync::mpsc::{channel, Sender, Receiver};
 use std::thread;
-use std::ops::Sub;
 
 trait From0 {
     fn from0(self) -> u32;
@@ -24,43 +22,18 @@ impl From0 for u8 {
 }
 
 fn get_tree(file_name: &str, tx: Sender<Vec<u32>>) {
-    let u_space = ' ' as u8;
-    let u_newline = '\n' as u8;
-    let u_0 = '0' as u8;
-    let u_9 = '9' as u8;
-
-    //let mut full_file = Vec::new();
     let f = File::open(file_name).expect("Cannot open file");
-    let mut file = BufReader::new(&f);
-    let mut temp: Vec<u32> = Vec::new();
-    let mut cur = 0;
-    for b in file.bytes() {
-        if let Ok(byte) = b {
-            cur = match byte as char {
-                ' ' => {
-                    temp.push(cur);
-                    0
-                }
-                '\n' => {
-                    temp.push(cur);
-                    tx.send(temp.split_off(0));
-                    0
-                }
-                '0'...'9' => cur * 10 + byte.from0(),
-                _ => cur,
-            }
-        }
-    }
-    if cur > 0 {
-        temp.push(cur);
-    }
-    if temp.len() > 0 {
-        tx.send(temp);
+    let file = BufReader::new(&f);
+    for l in file.lines() {
+        tx.send(l.unwrap()
+                .split(|c| c == ' ')
+                .map(|s| s.trim().parse::<u32>().unwrap_or(0))
+                .collect::<Vec<u32>>())
+            .expect("Send didn't work");
     }
 }
 
 fn longest_length(rx: Receiver<Vec<u32>>) -> u32 {
-    let mut tree_sums: Vec<Vec<u32>> = Vec::new();
     let mut last_sums: Vec<u32> = Vec::new();
 
     while let Ok(v) = rx.recv() {
@@ -90,9 +63,8 @@ fn longest_length(rx: Receiver<Vec<u32>>) -> u32 {
 fn get_longest_length(filename: &'static str) -> u32 {
     let (tx, rx) = channel();
 
-    let child1 = thread::spawn(move || get_tree(filename, tx));
+    thread::spawn(move || get_tree(filename, tx));
     let child2 = thread::spawn(|| longest_length(rx));
-    child1.join();
     child2.join().expect("Child 2 did not return a result")
 }
 
