@@ -13,8 +13,9 @@ fn get_names(file_name: &str) -> Vec<String> {
             .expect("Reading file failed");
         temp
     };
-    full_names.split(|c| c as char == ',')
-    .map(|w| &w[1..(w.len()-1)])
+    full_names.split(",")
+    .map(|w| w.trim_matches('"'))
+    //.map(|w| &w[1..(w.len()-1)])
     .map(|w| w.to_string())
     .collect()
 
